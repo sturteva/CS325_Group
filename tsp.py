@@ -4,16 +4,16 @@ import sys
 import math
 from mergesort import mergesort
 
+
 # A Vertex Object
 class Vertex(object):
 
     # The class "constructor"
-    def __init__(self, id, xCoord, yCoord):
+    def __init__(self, id, x_coord, y_coord):
         self.id = id
-        self.xCoord = xCoord
-        self.yCoord = yCoord
+        self.x_coord = x_coord
+        self.y_coord = y_coord
         self.degree = 0
-
 
 # An Edge Object
 class Edge(object):
@@ -22,16 +22,7 @@ class Edge(object):
     def __init__(self, v1, v2):
         self.v1 = v1
         self.v2 = v2
-        self.distance = int(round(math.sqrt(math.pow((v1.xCoord - v2.xCoord), 2) + math.pow((v1.yCoord - v2.yCoord), 2))))
-
-
-# A Tour Object
-class Tour(object):
-
-    #The class "constructor"
-    def __init__(self):
-        self.distance = 0
-        self.city_list = []
+        self.distance = int(round(math.sqrt(math.pow((v1.x_coord - v2.x_coord), 2) + math.pow((v1.y_coord - v2.y_coord), 2))))
 
 
 def create_edge_list(vertex_list):
@@ -62,52 +53,65 @@ def create_edge_list(vertex_list):
     return edge_list
 
 
-def compare_distances(x, y):
+def distance_comparator(x, y):
+    """Used in mergesort to compare two cities"""
     return x.distance <= y.distance
 
 
-def create_tour(edge_list):
-    tour = Tour()
-    num = len(edge_list)
-    for edge in edge_list:
+def does_create_cycle(tour_list, new_edge):
+    """Finds whether there exists a cycle with the added new_edge"""
+    current_v = new_edge.v1
+    current_e = new_edge
 
-        # Check degree of both vertices
-        if edge.v1.degree >= 2 or edge.v2.degree >= 2:
-            continue
+    done = False
 
-        else:
-            if len(tour.city_list) == num:
+    while not done:
+        found = False
+        for edge in tour_list:
+            if edge == current_e:
+                continue
+            if edge.v1 == current_v or edge.v2 == current_v:
+                found = True
+                if edge.v1 == current_v:
+                    current_v = edge.v2
+                else:
+                    current_v = edge.v1
+                current_e = edge
                 break
-            else:
-                tour.city_list.append(edge)
+        if not found:
+            return False
+        else:
+            if current_e.v1 == new_edge.v2 or current_e.v2 == new_edge.v2:
+                return True
+
+
+def create_tour(edge_list, num_cities):
+    tour_list = []
+    distance = 0
+
+    for edge in edge_list:
+        if edge.v1.degree < 2 and edge.v2.degree < 2:
+
+            has_cycle = does_create_cycle(tour_list, edge)
+            should_go_home = len(tour_list) + 1 == num_cities
+
+            if not has_cycle or (has_cycle and should_go_home):
                 edge.v1.degree += 1
                 edge.v2.degree += 1
-                tour.distance += edge.distance
+                distance += edge.distance
+                tour_list.append(edge)
 
-    return tour
+    return tour_list, distance
 
 
-def print_tour(tour, current_edge):
+def print_tour(tour_list, current_edge):
     print current_edge.v1.id
-    for remaining_edge in tour.city_list:
+    for remaining_edge in tour_list:
+        print(remaining_edge.v1.id)
         if remaining_edge.v1.id == current_edge.v2.id:
-            tour.city_list.remove(remaining_edge)
-            print_tour(tour, remaining_edge)
+            tour_list.remove(remaining_edge)
+            print_tour(tour_list, remaining_edge)
             break
-
-
-def create_fake_tour():
-    tour = Tour()
-    tour.distance = 5
-    vertex_one = Vertex(1, 0, 100)
-    vertex_two = Vertex(2, 500, 400)
-    vertex_three = Vertex(3, 300, 200)
-    vertex_four = Vertex(4, 200, 800)
-    edge_one = Edge(vertex_one, vertex_two)
-    edge_two = Edge(vertex_two, vertex_four)
-    edge_three = Edge(vertex_four, vertex_three)
-    edge_four = Edge(vertex_three, vertex_one)
-    tour.city_list = [edge_one, edge_two, edge_three, edge_four]
 
 
 # Driver Code
@@ -122,23 +126,26 @@ if __name__ == '__main__':
         for i in range(len(item)):
             item[i] = int(item[i])
 
-        temp_number = item[0]
-        temp_x_coord = item[1]
-        temp_y_coord = item[2]
-        new_city = Vertex(temp_number, temp_x_coord, temp_y_coord)
+        id = item[0]
+        x_coord = item[1]
+        y_coord = item[2]
+        new_city = Vertex(id, x_coord, y_coord)
         cities.append(new_city)
 
     f.close()
 
     edge_list = create_edge_list(cities)
+    mergesort(edge_list, comparator=distance_comparator)
+    tour_list, distance = create_tour(edge_list, len(cities))
 
-    mergesort(edge_list, 0, len(edge_list)-1, compare_distances)
-
-    tour = create_tour(edge_list)
-    # tour = create_fake_tour()
 
     ###OUTPUT###
-    print 'Total Distance: ', tour.distance
-    current_edge = tour.city_list[0]
-    tour.city_list.remove(current_edge)
-    print_tour(tour, current_edge)
+    print distance
+
+    for edge in tour_list:
+        print edge.v1.id, edge.v2.id
+
+    # current_edge = tour_list[0]
+    # tour_list.remove(current_edge)
+    # print_tour(tour_list, current_edge)
+
