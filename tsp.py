@@ -8,8 +8,8 @@ from mergesort import mergesort
 class Vertex(object):
 
     # The class "constructor"
-    def __init__(self, number, xCoord, yCoord):
-        self.number = number
+    def __init__(self, id, xCoord, yCoord):
+        self.id = id
         self.xCoord = xCoord
         self.yCoord = yCoord
         self.degree = 0
@@ -27,7 +27,6 @@ class Edge(object):
 
 
 def createEdgeList(vertexList, num):
-
     edgeList = []
     connectionMatrix = [[False for y in range(num)] for x in range(num)]
 
@@ -38,14 +37,14 @@ def createEdgeList(vertexList, num):
         for destination in vertexList:
 
             # Check if it is the same city, no need to add to list
-            if vertexList[i].number == destination.number:
+            if vertexList[i].id == destination.id:
                 continue
 
-            elif not connectionMatrix[destination.number][vertexList[i].number]:
+            elif not connectionMatrix[destination.id][vertexList[i].id]:
                 newEdge = Edge(vertexList[i],destination)
                 edgeList.append(newEdge)
-                connectionMatrix[vertexList[i].number][destination.number] = True
-                connectionMatrix[destination.number][vertexList[i].number] = True
+                connectionMatrix[vertexList[i].id][destination.id] = True
+                connectionMatrix[destination.id][vertexList[i].id] = True
 
     return edgeList
 
@@ -103,7 +102,7 @@ if __name__ == '__main__':
 
     ###OUTPUT###
     for tour in tourList:
-        print ("V1 #: %d" % tour.v1.number)
-        print ("V2 #: %d" % tour.v2.number)
+        print ("V1 #: %d" % tour.v1.id)
+        print ("V2 #: %d" % tour.v2.id)
         print ("Distance: %d" % tour.distance)
     print("# of cities in tour: %d" % len(tourList))
