@@ -2,170 +2,108 @@
 
 import sys
 import math
+from mergesort import mergesort
 
-#A Vertex Object
+# A Vertex Object
 class Vertex(object):
-	
-	#The class "constructor"
-	def __init__(self, number,xCoord,yCoord):
-		self.number = number
-		self.xCoord = xCoord
-		self.yCoord = yCoord
-		self.degree = 0
-		self.visited = False
 
-def make_vertex(number,xCoord,yCoord):
-	vertex = Vertex(number,xCoord,yCoord)
-	return vertex
+    # The class "constructor"
+    def __init__(self, number, xCoord, yCoord):
+        self.number = number
+        self.xCoord = xCoord
+        self.yCoord = yCoord
+        self.degree = 0
+        self.visited = False
 
-#An Edge Object
+
+# An Edge Object
 class Edge(object):
 
-	#The class "constructor"
-	def __init__(self,v1,v2): 
-		self.v1 = v1
-		self.v2 = v2
-		self.distance = math.sqrt(math.pow((v1.xCoord - v2.xCoord),2) + math.pow((v1.yCoord - v2.yCoord),2))
+    # The class "constructor"
+    def __init__(self, v1, v2):
+        self.v1 = v1
+        self.v2 = v2
+        self.distance = math.sqrt(math.pow((v1.xCoord - v2.xCoord), 2) + math.pow((v1.yCoord - v2.yCoord), 2))
 
 
-def make_edge(v1,v2):
-	edgeList = []
-	edge = Edge(v1,v2)
-	return edge
+def createEdgeList(vertexList, num):
 
-def createEdgeList(vertexList,num):
+    edgeList = []
+    connectionMatrix = [[False for y in range(num)] for x in range(num)]
 
-	edgeList = []
-	connectionMatrix =[[False for y in range(num)] for x in range(num)] 
+    # Should only need to go through the first half of the vertices to
+    # create a complete Graph - if it doesn't, just go through the list
+    for i in range(len(vertexList)):
 
-	#Should only need to go through the first half of the vertices to
-	#create a complete Graph - if it doesn't, just go through the list
-	for i in range(len(vertexList)):
+        for destination in vertexList:
 
-		for destination in vertexList:
+            # Check if it is the same city, no need to add to list
+            if vertexList[i].number == destination.number:
+                continue
 
-			#Check if it is the same city, no need to add to list
-			if  vertexList[i].number == destination.number:
-				continue
+            elif not connectionMatrix[destination.number][vertexList[i].number]:
+                newEdge = Edge(vertexList[i],destination)
+                edgeList.append(newEdge)
+                connectionMatrix[vertexList[i].number][destination.number] = True
+                connectionMatrix[destination.number][vertexList[i].number] = True
 
-			elif not connectionMatrix[destination.number][vertexList[i].number]:
-				newEdge = make_edge(vertexList[i],destination)
-				edgeList.append(newEdge)
-				connectionMatrix[vertexList[i].number][destination.number] = True
-				connectionMatrix[destination.number][vertexList[i].number] = True
-				
-	return edgeList
+    return edgeList
 
+def compare_distances(x, y):
+    return x.distance <= y.distance
 
-# Merges two subarrays of arr[].
-def merge(arr, leftIndex, middle, rightIndex):
-        sizeOne = middle - leftIndex + 1
-        sizeTwo = rightIndex - middle
+def createTour(edgeList, num):
+    tourList = []
+    tourDistance = 0
+    for edge in edgeList:
 
-        # create temp arrays
-        leftTemp = [0] * (sizeOne)
-        rightTemp = [0] * (sizeTwo)
+        # Check degree of both vertices
+        if edge.v1.degree >= 2 or edge.v2.degree >= 2:
+            continue
 
-        # Copy data to temp arrays L[] and R[]
-        for i in range(0 , sizeOne):
-                leftTemp[i] = arr[leftIndex + i]
+        else:
+            if len(tourList) == num:
+                break
+            else:
+                tourList.append(edge)
+                edge.v1.visited = True
+                edge.v2.visited = True
+                edge.v1.degree += 1
+                edge.v2.degree += 1
+                tourDistance += edge.distance
 
-        for j in range(0 , sizeTwo):
-                rightTemp[j] = arr[middle + 1 + j]
+    print(tourDistance)
+    return tourList
 
-        # Merge the temp arrays back into arr..r]
-        i = 0
-        j = 0
-        k = leftIndex
+# Driver Code
+if __name__ == '__main__':
+    cities = []
+    f = open(sys.argv[1], 'r')
 
-        while i < sizeOne and j < sizeTwo :
-                if leftTemp[i].distance <= rightTemp[j].distance:
-                        arr[k] = leftTemp[i]
-                        i += 1
-                else:
-                        arr[k] = rightTemp[j]
-                        j += 1
-                k += 1
+    # Get our Input
+    for line in f:
+        item = line.split(' ')
 
-        # Copy the remaining elements of L[], if there
-        # are any
-        while i < sizeOne:
-                arr[k] = leftTemp[i]
-                i += 1
-                k += 1
+        for i in range(len(item)):
+            item[i] = int(item[i])
 
-        # Copy the remaining elements of R[], if there
-        # are any
-        while j < sizeTwo:
-                arr[k] = rightTemp[j]
-                j += 1
-                k += 1
+        tempNumber = item[0]
+        tempX_Coord = item[1]
+        tempY_Coord = item[2]
+        newCity = Vertex(tempNumber, tempX_Coord, tempY_Coord)
+        cities.append(newCity)
 
+    f.close()
 
-def mergesort(arr,leftIndex,rightIndex):
-	if leftIndex < rightIndex:
+    edgeList = createEdgeList(cities,len(cities))
 
-		#samee as (l+r)/2, but avoids overflow for
-	        # large l and h
-        	middle = (leftIndex+(rightIndex-1))/2
+    mergesort(edgeList, 0, len(edgeList)-1, compare_distances)
 
-	        # Sort first and second halves
-	        mergesort(arr, leftIndex, middle)
-	        mergesort(arr, middle+1, rightIndex)
-	        merge(arr, leftIndex, middle, rightIndex)
+    tourList = createTour(edgeList,len(cities))
 
-
-def createTour(edgeList,num):
-	
-	tourList = []
-	tourDistance = 0
-	for each in edgeList:
-	
-		#check degree of both vertices
-		if each.v1.degree >= 2 | each.v2.degree >= 2 :
-			continue
-
-		else:
-			if len(tourList) == num:
-				break
-			else:
-				tourList.append(each)
-				each.v1.visited = True
-				each.v2.visited = True	
-				each.v1.degree += 1
-				each.v2.degree += 1
-				tourDistance += each.distance
-
-	print(tourDistance)
-	return tourList
-
-#Driver Code
-
-cities = []
-f = open(sys.argv[1],"r")
-
-#Get our Input
-for line in f:
-	item = line.split(' ')
-
-	for i in range(len(item)):
-		item[i] = int(item[i])
-
-	tempNumber = item[0]
-	tempX_Coord = item[1]
-	tempY_Coord = item[2]
-	newCity = make_vertex(tempNumber,tempX_Coord,tempY_Coord)
-	cities.append(newCity)
-
-edgeList = createEdgeList(cities,len(cities))
-
-mergesort(edgeList,0,len(edgeList)-1)
-
-tourList = createTour(edgeList,len(cities))
-
-###OUTPUT###
-for each in tourList:
-	print ("V1 #: %d" % each.v1.number)
-	print ("V2 #: %d" % each.v2.number)
-	print ("Distance: %d" % each.distance)
-print("# of cities in tour: %d" % len(tourList))
+    ###OUTPUT###
+    for tour in tourList:
+        print ("V1 #: %d" % tour.v1.number)
+        print ("V2 #: %d" % tour.v2.number)
+        print ("Distance: %d" % tour.distance)
+    print("# of cities in tour: %d" % len(tourList))
