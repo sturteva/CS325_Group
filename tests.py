@@ -1,5 +1,10 @@
 import unittest
 from mergesort import mergesort
+from tsp import (
+    create_edge_list,
+    Vertex,
+    Edge,
+)
 
 class TestMergeSort(unittest.TestCase):
 
@@ -75,6 +80,26 @@ class TestMergeSort(unittest.TestCase):
             arr,
             [],
         )
+
+
+class TestCreateEdgeList(unittest.TestCase):
+
+    def test_edge_list(self):
+        vertices = [Vertex(i, i * 2, i * 2) for i in range(4)]
+        edge_list = create_edge_list(vertices)
+
+        self.assertEqual(len(edge_list), 6)
+        expected = [
+            {'v1': 0, 'v2': 1, 'distance': 3},
+            {'v1': 0, 'v2': 2, 'distance': 6},
+            {'v1': 0, 'v2': 3, 'distance': 8},
+            {'v1': 1, 'v2': 2, 'distance': 3},
+            {'v1': 1, 'v2': 3, 'distance': 6},
+            {'v1': 2, 'v2': 3, 'distance': 3},
+        ]
+        actual = [{'v1': edge.v1.id, 'v2': edge.v2.id, 'distance': edge.distance} for edge in edge_list]
+        self.assertSequenceEqual(actual, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

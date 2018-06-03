@@ -23,30 +23,36 @@ class Edge(object):
     def __init__(self, v1, v2):
         self.v1 = v1
         self.v2 = v2
-        self.distance = math.sqrt(math.pow((v1.xCoord - v2.xCoord), 2) + math.pow((v1.yCoord - v2.yCoord), 2))
+        self.distance = int(round(math.sqrt(math.pow((v1.xCoord - v2.xCoord), 2) + math.pow((v1.yCoord - v2.yCoord), 2))))
 
 
-def createEdgeList(vertexList, num):
-    edgeList = []
-    connectionMatrix = [[False for y in range(num)] for x in range(num)]
+def create_edge_list(vertex_list):
+    """ Creates a list of non redundant egdes connecting every vertex to other all vertices
 
-    # Should only need to go through the first half of the vertices to
-    # create a complete Graph - if it doesn't, just go through the list
-    for i in range(len(vertexList)):
+    Our TSP graph is undirected, so one edge is enough to represent the connection
+    between two vertices.
+    """
+    edge_list = []
+    num = len(vertex_list)
+    connection_matrix = [[False for y in range(num)] for x in range(num)]
 
-        for destination in vertexList:
+    # TODO: Should only need to go through the first half of the vertices to
+    # create a complete Graph
+    # For instance, you won't need edge (A, B) & (B, A)
+    for start in vertex_list:
+        for destination in vertex_list:
 
             # Check if it is the same city, no need to add to list
-            if vertexList[i].id == destination.id:
+            if start.id == destination.id:
                 continue
 
-            elif not connectionMatrix[destination.id][vertexList[i].id]:
-                newEdge = Edge(vertexList[i],destination)
-                edgeList.append(newEdge)
-                connectionMatrix[vertexList[i].id][destination.id] = True
-                connectionMatrix[destination.id][vertexList[i].id] = True
+            elif not connection_matrix[destination.id][start.id]:
+                new_edge = Edge(start, destination)
+                edge_list.append(new_edge)
+                connection_matrix[start.id][destination.id] = True
+                connection_matrix[destination.id][start.id] = True
 
-    return edgeList
+    return edge_list
 
 def compare_distances(x, y):
     return x.distance <= y.distance
@@ -94,7 +100,7 @@ if __name__ == '__main__':
 
     f.close()
 
-    edgeList = createEdgeList(cities,len(cities))
+    edgeList = create_edge_list(cities)
 
     mergesort(edgeList, 0, len(edgeList)-1, compare_distances)
 
