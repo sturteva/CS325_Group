@@ -104,15 +104,20 @@ def create_tour(edge_list, num_cities):
     return tour_list, distance
 
 
-def print_tour(tour_list, current_edge):
-    print current_edge.v1.id
-    for remaining_edge in tour_list:
-        print(remaining_edge.v1.id)
-        if remaining_edge.v1.id == current_edge.v2.id:
-            tour_list.remove(remaining_edge)
-            print_tour(tour_list, remaining_edge)
-            break
-
+def print_tour(o, tour_list, current_edge, search_city):
+    """Adds tour in order to output file, skipping first city when listed at end"""
+    o.write('%i\n' % search_city.id)
+    while (len(tour_list) > 1):
+        for remaining_edge in tour_list:
+            if remaining_edge.v1.id == search_city.id:
+                tour_list.remove(remaining_edge)
+                print_tour(o, tour_list, remaining_edge, remaining_edge.v2)
+                break
+            elif remaining_edge.v2.id == search_city.id:
+                tour_list.remove(remaining_edge)
+                print_tour(o, tour_list, remaining_edge, remaining_edge.v1)
+                break
+    
 
 # Driver Code
 if __name__ == '__main__':
@@ -138,14 +143,10 @@ if __name__ == '__main__':
     mergesort(edge_list, comparator=distance_comparator)
     tour_list, distance = create_tour(edge_list, len(cities))
 
-
-    ###OUTPUT###
-    print distance
-
-    for edge in tour_list:
-        print edge.v1.id, edge.v2.id
-
-    # current_edge = tour_list[0]
-    # tour_list.remove(current_edge)
-    # print_tour(tour_list, current_edge)
-
+    # Print output
+    with open(sys.argv[1] + '.tour', 'w') as o:
+        o.write('%i\n' % distance)
+        current_edge = tour_list[0]
+        o.write('%i\n' % current_edge.v1.id)
+        tour_list.remove(current_edge)
+        print_tour(o, tour_list, current_edge, current_edge.v2)
