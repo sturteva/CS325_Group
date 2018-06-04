@@ -13,3 +13,7 @@ from the root directory
 To run the tests,
 run
 `python tests.py`
+
+##TSP-Verifier
+To verify that all locations were added to the solution file
+`python tsp-verifier [input filename] [solution filename]`
