@@ -22,7 +22,7 @@ class Edge(object):
     def __init__(self, v1, v2):
         self.v1 = v1
         self.v2 = v2
-        self.distance = int(round(math.sqrt(math.pow((v1.x_coord - v2.x_coord), 2) + math.pow((v1.y_coord - v2.y_coord), 2))))
+        self.distance = round(math.sqrt(math.pow((v1.x_coord - v2.x_coord), 2) + math.pow((v1.y_coord - v2.y_coord), 2)))
 
 
 def create_edge_list(vertex_list):
@@ -93,8 +93,9 @@ def create_tour(edge_list, num_cities):
         if edge.v1.degree < 2 and edge.v2.degree < 2:
 
             has_cycle = does_create_cycle(tour_list, edge)
-            should_go_home = len(tour_list) + 1 == num_cities
 
+            should_go_home = len(tour_list)+ 1 == num_cities
+	  	    
             if not has_cycle or (has_cycle and should_go_home):
                 edge.v1.degree += 1
                 edge.v2.degree += 1
