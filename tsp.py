@@ -13,7 +13,6 @@ class Vertex(object):
         self.xCoord = xCoord
         self.yCoord = yCoord
         self.degree = 0
-        self.visited = False
 
 
 # An Edge Object
@@ -26,9 +25,17 @@ class Edge(object):
         self.distance = int(round(math.sqrt(math.pow((v1.xCoord - v2.xCoord), 2) + math.pow((v1.yCoord - v2.yCoord), 2))))
 
 
+# A Tour Object
+class Tour(object):
+
+    #The class "constructor"
+    def __init__(self):
+        self.distance = 0
+        self.city_list = []
+
+
 def create_edge_list(vertex_list):
     """ Creates a list of non redundant egdes connecting every vertex to other all vertices
-
     Our TSP graph is undirected, so one edge is enough to represent the connection
     between two vertices.
     """
@@ -54,31 +61,54 @@ def create_edge_list(vertex_list):
 
     return edge_list
 
+
 def compare_distances(x, y):
     return x.distance <= y.distance
 
-def createTour(edgeList, num):
-    tourList = []
-    tourDistance = 0
-    for edge in edgeList:
+
+def create_tour(edge_list):
+    tour = Tour()
+    num = len(edge_list)
+    for edge in edge_list:
 
         # Check degree of both vertices
         if edge.v1.degree >= 2 or edge.v2.degree >= 2:
             continue
 
         else:
-            if len(tourList) == num:
+            if len(tour.city_list) == num:
                 break
             else:
-                tourList.append(edge)
-                edge.v1.visited = True
-                edge.v2.visited = True
+                tour.city_list.append(edge)
                 edge.v1.degree += 1
                 edge.v2.degree += 1
-                tourDistance += edge.distance
+                tour.distance += edge.distance
 
-    print(tourDistance)
-    return tourList
+    return tour
+
+
+def print_tour(tour, current_edge):
+    print current_edge.v1.id
+    for remaining_edge in tour.city_list:
+        if remaining_edge.v1.id == current_edge.v2.id:
+            tour.city_list.remove(remaining_edge)
+            print_tour(tour, remaining_edge)
+            break
+
+
+def create_fake_tour():
+    tour = Tour()
+    tour.distance = 5
+    vertex_one = Vertex(1, 0, 100)
+    vertex_two = Vertex(2, 500, 400)
+    vertex_three = Vertex(3, 300, 200)
+    vertex_four = Vertex(4, 200, 800)
+    edge_one = Edge(vertex_one, vertex_two)
+    edge_two = Edge(vertex_two, vertex_four)
+    edge_three = Edge(vertex_four, vertex_three)
+    edge_four = Edge(vertex_three, vertex_one)
+    tour.city_list = [edge_one, edge_two, edge_three, edge_four]
+
 
 # Driver Code
 if __name__ == '__main__':
@@ -92,23 +122,23 @@ if __name__ == '__main__':
         for i in range(len(item)):
             item[i] = int(item[i])
 
-        tempNumber = item[0]
-        tempX_Coord = item[1]
-        tempY_Coord = item[2]
-        newCity = Vertex(tempNumber, tempX_Coord, tempY_Coord)
-        cities.append(newCity)
+        temp_number = item[0]
+        temp_x_coord = item[1]
+        temp_y_coord = item[2]
+        new_city = Vertex(temp_number, temp_x_coord, temp_y_coord)
+        cities.append(new_city)
 
     f.close()
 
-    edgeList = create_edge_list(cities)
+    edge_list = create_edge_list(cities)
 
-    mergesort(edgeList, 0, len(edgeList)-1, compare_distances)
+    mergesort(edge_list, 0, len(edge_list)-1, compare_distances)
 
-    tourList = createTour(edgeList,len(cities))
+    tour = create_tour(edge_list)
+    # tour = create_fake_tour()
 
     ###OUTPUT###
-    for tour in tourList:
-        print ("V1 #: %d" % tour.v1.id)
-        print ("V2 #: %d" % tour.v2.id)
-        print ("Distance: %d" % tour.distance)
-    print("# of cities in tour: %d" % len(tourList))
+    print 'Total Distance: ', tour.distance
+    current_edge = tour.city_list[0]
+    tour.city_list.remove(current_edge)
+    print_tour(tour, current_edge)
