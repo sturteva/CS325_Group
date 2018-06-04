@@ -126,9 +126,10 @@ if __name__ == '__main__':
 
     # Get our Input
     for line in f:
-        item = line.split(' ')
+        item = line.split()
 
         for i in range(len(item)):
+					
             item[i] = int(item[i])
 
         id = item[0]
