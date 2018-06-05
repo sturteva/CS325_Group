@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import timeit
 import sys
 import math
 from mergesort import mergesort
@@ -30,10 +30,14 @@ def create_edge_list(vertex_list):
     Our TSP graph is undirected, so one edge is enough to represent the connection
     between two vertices.
     """
+
+   
     edge_list = []
     num = len(vertex_list)
+  
     connection_matrix = [[False for y in range(num)] for x in range(num)]
-
+ 
+    
     # TODO: Should only need to go through the first half of the vertices to
     # create a complete Graph
     # For instance, you won't need edge (A, B) & (B, A)
@@ -45,10 +49,12 @@ def create_edge_list(vertex_list):
                 continue
 
             elif not connection_matrix[destination.id][start.id]:
+
                 new_edge = Edge(start, destination)
                 edge_list.append(new_edge)
                 connection_matrix[start.id][destination.id] = True
-                connection_matrix[destination.id][start.id] = True
+                connection_matrix[destination.id][start.id] = True 
+
 
     return edge_list
 
@@ -82,7 +88,7 @@ def does_create_cycle(tour_list, new_edge):
             return False
         else:
             if current_e.v1 == new_edge.v2 or current_e.v2 == new_edge.v2:
-                return True
+	             return True
 
 
 def create_tour(edge_list, num_cities):
@@ -105,23 +111,29 @@ def create_tour(edge_list, num_cities):
     return tour_list, distance
 
 
-def print_tour(o, tour_list, current_edge, search_city):
+def print_tour(o, tour_list, search_city):
     """Adds tour in order to output file, skipping first city when listed at end"""
-    o.write('%i\n' % search_city.id)
+
+#    o.write('%i\n' % search_city.id)
     while (len(tour_list) > 1):
+	
         for remaining_edge in tour_list:
             if remaining_edge.v1.id == search_city.id:
+		o.write('%i\n' % remaining_edge.v1.id)
                 tour_list.remove(remaining_edge)
-                print_tour(o, tour_list, remaining_edge, remaining_edge.v2)
-                break
+		search_city = remaining_edge.v2
+	        break
             elif remaining_edge.v2.id == search_city.id:
+                o.write('%i\n' % remaining_edge.v2.id)
                 tour_list.remove(remaining_edge)
-                print_tour(o, tour_list, remaining_edge, remaining_edge.v1)
+                search_city = remaining_edge.v1
                 break
-    
+    o.write('%i\n' % search_city.id)
+   	 
 
 # Driver Code
 if __name__ == '__main__':
+    startTime = timeit.default_timer()	
     cities = []
     f = open(sys.argv[1], 'r')
 
@@ -134,7 +146,7 @@ if __name__ == '__main__':
             item[i] = int(item[i])
 
         id = item[0]
-        x_coord = item[1]
+	x_coord = item[1]
         y_coord = item[2]
         new_city = Vertex(id, x_coord, y_coord)
         cities.append(new_city)
@@ -151,4 +163,9 @@ if __name__ == '__main__':
         current_edge = tour_list[0]
         o.write('%i\n' % current_edge.v1.id)
         tour_list.remove(current_edge)
-        print_tour(o, tour_list, current_edge, current_edge.v2)
+        print_tour(o, tour_list, current_edge.v2)
+
+    endTime = timeit.default_timer()
+    runTime = (endTime - startTime) * 1000
+    print "TheRuntime in Milliseconds is:"
+    print runTime
