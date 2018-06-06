@@ -2,6 +2,7 @@
 import timeit
 import sys
 import math
+import random
 from mergesort import mergesort
 
 
@@ -110,7 +111,115 @@ def create_tour(edge_list, num_cities):
 
     return tour_list, distance
 
+def get_distance(v1,v2):
 
+	return round(math.sqrt(math.pow((v1.x_coord - v2.x_coord), 2) + math.pow((v1.y_coord - v2.y_coord), 2)))
+
+def two_opt(tour_list, edge_list,startTime):
+
+	#going to make a copy of our tour_list
+	curbest = []
+	for each in tour_list:
+		curbest.append(each)
+        currentTime = timeit.default_timer()
+
+	i = 0
+
+	while (currentTime-startTime)*1000 < 140000 and i < len(curbest):
+		print (i)
+		#Here we need to decide which two edges to 'swap' and check
+		#right now it is random
+		edge1 = curbest[len(curbest)-1-i]
+		edge2 = curbest[len(curbest)-i-2]
+		v1 = edge1.v1
+		v2 = edge1.v2
+		v3 = edge2.v1
+		v4 = edge2.v2
+
+		targetDistance = edge1.distance + edge2.distance
+		
+		if v1 == v3 or v1 == v4 or v2 == v3 or v2 == v4:
+			i += 1
+			continue
+
+		else:
+			print ("got here")
+			#odds/Even distance
+			oddDistance = get_distance(v1,v3)
+			evenDistance = get_distance(v2,v4)
+			oddEven = oddDistance + evenDistance
+
+			#inside/outside distance
+			insideDistance = get_distance(v2,v3)
+			outsideDistance = get_distance(v1,v4)
+			insideOutside = insideDistance + outsideDistance
+
+			#checks to see which is smaller
+			if oddEven < insideOutside:
+				print("oddEVen smaller")
+				#now checks if less than currentdistance
+				if oddEven < targetDistance:
+					new_edge1 = Edge(v1,v3)
+
+	             	                curbest.remove(edge1)
+        	        	        cycle1 = does_create_cycle(curbest,new_edge1)
+
+                	                #A cycle is not created, reset and restart
+                        	        if not cycle1:
+                                	        curbest.append(edge1)
+	                                       	continue
+        	                        else:
+                	                        curbest.append(new_edge1)
+
+                        	        new_edge2 = Edge(v2,v4)
+	                                curbest.remove(edge2)
+	                                cycle2 = does_create_cycle(curbest,new_edge2)
+
+        	                        #A cycle is not created, reset and restart
+                	                if not cycle2:
+                        	                curbest.remove(new_edge1)
+                                	        curbest.append(edge1)
+                                        	curbest.append(edge2)
+	                                        continue
+        	                        else:
+                	                        curbest.append(new_edge1)
+
+
+			
+			elif insideOutside < targetDistance:
+				print("insideOutside smaller")
+				
+				new_edge1 = Edge(v2,v3)
+
+				curbest.remove(edge1)
+				cycle1 = does_create_cycle(curbest,new_edge1)
+		
+				#A cycle is not created, reset and restart
+				if not cycle1:
+					curbest.append(edge1)
+					continue
+				else:
+					curbest.append(new_edge1)
+
+				new_edge2 = Edge(v1,v4)
+				curbest.remove(edge2)
+				cycle2 = does_create_cycle(curbest,new_edge2)
+
+				#A cycle is not created, reset and restart
+				if not cycle2:
+					curbest.remove(new_edge1)
+					curbest.append(edge1)
+					curbest.append(edge2)
+					continue
+				else:
+					curbest.append(new_edge1)
+					
+				
+							
+		i += 1
+		currentTime = timeit.default_timer()
+		 
+	return curbest
 def print_tour(o, tour_list, search_city):
     """Adds tour in order to output file, skipping first city when listed at end"""
 
@@ -156,6 +265,20 @@ if __name__ == '__main__':
     edge_list = create_edge_list(cities)
     mergesort(edge_list, comparator=distance_comparator)
     tour_list, distance = create_tour(edge_list, len(cities))
+
+    #Checks if we are under 3 minutes to continue optimization
+    #Leaving 40 seconds to write to the file(this number can be changed
+    timeCheck = timeit.default_timer()
+    if (timeCheck-startTime)*1000 < 140000:
+        tour_list = two_opt(tour_list,edge_list,startTime)
+	
+	#need to calculate new distance
+	distance = 0
+	for each in tour_list:
+		distance += each.distance
+
+	print(distance)
+
 
     # Print output
     with open(sys.argv[1] + '.tour', 'w') as o:
