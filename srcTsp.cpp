@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <sstream>
-#include <locale>
+#include <ctime>
 
 
 using namespace std;
@@ -74,6 +74,21 @@ public:
     int getDistance() {
         return distance;
     }
+
+    //Change v1, auto-calcs new distance
+    void setV1(Vertex* v){
+	v1 = v;
+	distance = round(sqrt(pow(v1->getXCoord() - v2->getXCoord(), 2) + pow(v1->getYCoord() - v2->getYCoord(), 2)));
+    }
+
+    void setV2(Vertex* v){
+		
+	v2 = v;
+
+	 distance = round(sqrt(pow(v1->getXCoord() - v2->getXCoord(), 2) + pow(v1->getYCoord() - v2->getYCoord(), 2)));
+
+
+	}
 
     void display() {
         cout << "v1.id: " << v1->getId()  << ", v2.id: " << v2->getId() << ", distance: " << distance << endl;
@@ -275,41 +290,133 @@ vector<Edge*> create_tour(vector<Edge*> edge_list,int num_cities){
 
 }
 
-void print_tour(ofstream&  o, vector<Edge*> tour_list, Vertex* search_city){
+int get_distance(Vertex* v1, Vertex* v2){
+
+	return round(sqrt(pow(v1->getXCoord() - v2->getXCoord(), 2) + pow(v1->getYCoord() - v2->getYCoord(), 2)));
+}
+
+int get_total_distance( vector<Vertex*> adj_list){
+
+	int distance = 0;
+
+	 for(int i = 0; i < adj_list.size()-1; ++i){
+                distance += get_distance(adj_list[i],adj_list[i+1]);
+
+        }
+
+        //distance between last and first
+        distance += get_distance(adj_list[0],adj_list[adj_list.size()-1]);
+        
+	return distance;
+
+}
+
+vector<Vertex*> create_adj_list(vector<Edge*> tour_list){
+
+	vector<Vertex*> adjList;
+
+	adjList.push_back(tour_list[0]->getV1());
+	Vertex* city = tour_list[0]->getV2();
+	tour_list.erase(tour_list.begin());
 
 	while(!tour_list.empty()){
 
 		int i = 0;
-		for(auto start = tour_list.begin(); start!= tour_list.end(); ++start){
 
-			
-			if((*start)->getV1()->getId() == search_city->getId()){
+		for(auto start = tour_list.begin(); start != tour_list.end(); ++start){
+
+			if((*start)->getV1()->getId() == city->getId()){
+				adjList.push_back(city);
+				city = (*start)->getV2();
+				tour_list.erase(tour_list.begin() + i);
+				break;
+			} 
+
+			else if((*start)->getV2()->getId() == city->getId()){
 				
-				o << search_city->getId() << endl;
-				search_city = (*start)->getV2();
-				tour_list.erase(tour_list.begin() + i);
-				break;
-			
+				adjList.push_back(city);
+				city = (*start)->getV1();
+				tour_list.erase(tour_list.begin() +i);
+				break;	
 			}
 
-			else if((*start)->getV2()->getId() == search_city->getId()){
-
-				o << search_city->getId() << endl;
-				search_city = (*start)->getV1();
-				tour_list.erase(tour_list.begin() + i);
-				break;
-			}
-		
 			i++;
 		}
 
 	}
+	return adjList;	
+	
+}
 
-	o << search_city->getId() << endl;
+vector<Vertex*> twoOptSwap(vector<Vertex*> list,int i,int k){
+
+	vector<Vertex*> new_route;
+
+	//Take list[0] to list[i-1] add them in order to new_route
+	for(int m = 0; m < i; ++m){
+		new_route.push_back(list[m]);
+	}
+
+	//Take list[i] to list[k] and add them in reverse order to new_route
+	int dec = 0;
+	for(int w = i; w <= k; ++w){
+		new_route.push_back(list[k-dec]);
+		dec++;
+	}
+
+	//Take list[k+1] to end and add them in order to new_route
+	for(int v = k+1; v < list.size(); ++v){
+		new_route.push_back(list[v]);
+	}
+
+	return new_route;
 
 }
 
+vector<Vertex*> twoOpt(vector<Vertex*> adj_list, clock_t startTime){
+
+	bool improvement = true;
+
+	int best_dist = get_total_distance(adj_list);
+
+	//Probably want to add a time component here as well
+	while(improvement){
+		improvement = false;
+
+		clock_t runTime = clock() - startTime;
+
+		if((runTime/CLOCKS_PER_SEC) >= 150)
+			return adj_list;	
+
+		for(int i = 1; i < adj_list.size() -1; ++i){
+			for(int k = i + 1; k< adj_list.size(); ++k){
+
+				vector<Vertex*> new_route = twoOptSwap(adj_list,i,k);
+				int new_distance = get_total_distance(new_route);
+		
+				if(new_distance < best_dist){
+					
+					adj_list = new_route;
+					best_dist = new_distance;
+					improvement = true;
+					break;
+				}
+				
+			}
+			
+
+	}
+
+	}
+
+	return adj_list;
+
+}
+
+
 int main (int argc, char *argv[]) {
+
+    clock_t startTime = clock();
     string line;
     vector<Vertex*> cities;
     cout << "Starting tsp..." << endl;
@@ -383,19 +490,20 @@ int main (int argc, char *argv[]) {
     vector<Edge*> tour_list = create_tour(edgeList,num_cities);
 
      //remove, here for debug
-/*     for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
-		cout << "in tour display loop" << endl;
+   /*  for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
 		(*iter)->display();
      }*/
 
 
-    
-    int distance = 0;
+    ///Build Adj list
+    vector<Vertex*> adj_list = create_adj_list(tour_list);
 
-    //calculate distance
-   for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
-	distance += (*iter)->getDistance();
-   }
+    clock_t runTime = clock() - startTime;
+    float inSeconds = (float)runTime/(CLOCKS_PER_SEC);
+ 
+    if(inSeconds < 140){
+	adj_list = twoOpt(adj_list,startTime);
+    }
 
 // write output
      
@@ -414,14 +522,14 @@ int main (int argc, char *argv[]) {
         return 1;
     }	 
 
-   o << distance << endl;	
-   Edge* current_edge = tour_list[0];
-   o << current_edge->getV1()->getId() << endl;
-   tour_list.erase(tour_list.begin());
-   print_tour(o,tour_list, current_edge->getV2());
+   o << get_total_distance(adj_list) << endl;	
+	for(auto iter = adj_list.begin(); iter != adj_list.end(); ++iter){
+		o << (*iter)->getId() << endl;
+	}   
 
     // cleanup
     o.close();    
+    adj_list.clear();
     cities.clear();
     edgeList.clear();
     tour_list.clear();
