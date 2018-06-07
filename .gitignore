@@ -63,3 +63,8 @@ typings/
 # python cache
 __pycache__/
 *.pyc
+
+#CPP
+*.o
+tsp
+
