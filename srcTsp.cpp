@@ -35,6 +35,14 @@ public:
         return yCoord;
     }
 
+    int getDegree(){
+	return degree;
+    }
+
+    void upDegree(){
+	degree++;
+    }
+
     void display() {
         cout << "id: " << id << ", x: " << xCoord << ", y: " << yCoord << endl;
     }
@@ -52,6 +60,14 @@ public:
         distance = round(sqrt(pow(v1->getXCoord() - v2->getXCoord(), 2) + pow(v1->getYCoord() - v2->getYCoord(), 2)));
     };
     ~Edge() {}
+    
+    Vertex* getV1(){
+	return v1;
+    }
+
+    Vertex* getV2(){
+	return v2;
+    }
 
     int getDistance() {
         return distance;
@@ -156,6 +172,92 @@ vector<Edge*> createEdgeList(vector<Vertex*> cities) {
     return edgeList;
 }
 
+bool does_create_cycle(vector<Edge*> tour_list, Edge* new_edge){
+
+	Vertex* current_v;
+	Edge* current_e;
+	int j = 0;
+
+	//Determine if a cycle has been or will be created
+	if (new_edge == NULL){
+		new_edge = current_e = tour_list[0];
+		current_v = current_e->getV1();
+		j++;
+	}
+
+	else{
+		current_v = new_edge->getV1();
+		current_e = new_edge;
+	}
+
+	bool done = false;
+
+	while(!done){
+		
+		bool found = false;
+
+		for(int i = j; i < tour_list.size();++i){
+	
+			if(tour_list[i] == current_e)
+				continue;
+			
+			if(tour_list[i]->getV1() == current_v || tour_list[i]->getV2() == current_v){
+				found = true;
+				if(tour_list[i]->getV1() == current_v)
+					current_v = tour_list[i]->getV2();
+
+				else
+					current_v = tour_list[i]->getV1();
+				current_e = tour_list[i];
+				break;
+			}
+		}
+
+		if(!found)
+			return false;
+
+		else{
+			if(current_e->getV1() == new_edge->getV2() || current_e->getV2() == new_edge->getV2())
+				return true;
+		}
+
+	}
+
+	return NULL;
+}
+
+vector<Edge*> create_tour(vector<Edge*> edge_list){
+
+	vector<Edge*> tour_list;
+	int num_cities = edge_list.size();
+	
+	for(auto start = edge_list.begin(); start != edge_list.end(); ++start){
+		
+		if((*start)->getV1()->getDegree() < 2 && (*start)->getV2()->getDegree() < 2){
+
+			bool has_cycle = does_create_cycle(tour_list,(*start));	
+
+			bool should_go_home = false;
+
+			if(tour_list.size() == num_cities)
+				should_go_home = true;
+
+			if(!has_cycle || (has_cycle && should_go_home)){
+
+				(*start)->getV1()->upDegree();
+				(*start)->getV2()->upDegree();
+				tour_list.push_back((*start));
+				
+			}
+			
+		}
+
+	}
+
+	return tour_list;
+
+}
+
 int main (int argc, char *argv[]) {
     string line;
     vector<Vertex*> cities;
@@ -206,16 +308,24 @@ int main (int argc, char *argv[]) {
     mergesort(&edgeList);
 
     // remove, here for debug
-    for (auto iter = edgeList.begin(); iter != edgeList.end(); ++iter) {
+/*    for (auto iter = edgeList.begin(); iter != edgeList.end(); ++iter) {
         (*iter)->display();
-    }
+    }*/
 
     // create tour
+    vector<Edge*> tour_list = create_tour(edgeList);
+
+     //remove, here for debug
+     for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
+		(*iter)->display();
+	}
+
     // write output
 
     // cleanup
     cities.clear();
     edgeList.clear();
+    tour_list.clear();
 
     return 0;
 }
