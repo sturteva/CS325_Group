@@ -256,6 +256,7 @@ vector<Edge*> create_tour(vector<Edge*> edge_list,int num_cities){
 		}
 
 	}
+	
 
 	return tour_list;
 
@@ -324,10 +325,15 @@ int main (int argc, char *argv[]) {
 	
 	//removes all whitespaces
         while(!ss.eof()){
+		
 		ss >> token;
+//		cout << token << endl; 
 		tokens.push_back(token);
+		if(tokens.size() == 3)
+			break;
 	}
-	if(tokens.size() == 3){
+	
+//		cout << "vertex being created" << endl;
                 Vertex *v = new Vertex(
                 stoi(tokens[0]),
                 stoi(tokens[1]),
@@ -335,7 +341,9 @@ int main (int argc, char *argv[]) {
             );
 
            cities.push_back(v);
-        }}
+        
+
+	}
     
     if (f.bad()) {
         cerr << "error reading file: " << argv[1] << endl;
@@ -344,9 +352,11 @@ int main (int argc, char *argv[]) {
 
     f.close();
 
+
+	
     // creat all edges
     vector<Edge*> edgeList = createEdgeList(cities);
-
+	
     // sort
     mergesort(&edgeList);
 
@@ -361,11 +371,14 @@ int main (int argc, char *argv[]) {
 
      //remove, here for debug
 /*     for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
+		cout << "in tour display loop" << endl;
 		(*iter)->display();
-	}*/
+     }*/
+
 
     
     int distance = 0;
+
     //calculate distance
    for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
 	distance += (*iter)->getDistance();
