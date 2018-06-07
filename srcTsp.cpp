@@ -190,8 +190,21 @@ vector<Edge*> createEdgeList(vector<Vertex*> cities) {
 //Used Master Branch version for now
 bool does_create_cycle(vector<Edge*> tour_list, Edge* new_edge){
 
-	Vertex* current_v = new_edge->getV1();
-	Edge* current_e = new_edge;
+	Vertex* current_v;
+	Edge* current_e;
+	int k = 0;
+
+	if(new_edge == NULL){
+		new_edge = tour_list[0];
+		current_e = new_edge;
+		current_v = current_e->getV1();
+		k++;
+	}
+
+	else{
+		current_v = new_edge->getV1();
+		current_e = new_edge;
+	}
 	
 	bool done = false;
 
@@ -199,7 +212,7 @@ bool does_create_cycle(vector<Edge*> tour_list, Edge* new_edge){
 		
 		bool found = false;
 
-		for(auto start = tour_list.begin(); start != tour_list.end(); ++start){
+		for(auto start = tour_list.begin()+k; start != tour_list.end(); ++start){
 	
 			if((*start) == current_e)
 				continue;
