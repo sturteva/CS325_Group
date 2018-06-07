@@ -4,6 +4,8 @@
 #include <cmath>
 #include <vector>
 #include <sstream>
+#include <locale>
+
 
 using namespace std;
 
@@ -134,6 +136,7 @@ void mergesort(vector<Edge*> *arr) {
 }
 
 vector<Edge*> createEdgeList(vector<Vertex*> cities) {
+
     vector<Edge*> edgeList;
     int numCities = cities.size();
     int **connectionMatrix = new int*[numCities];
@@ -151,17 +154,28 @@ vector<Edge*> createEdgeList(vector<Vertex*> cities) {
 
     // calculate edges based on passed cities
     for (auto start = cities.begin(); start != cities.end(); ++start) {
+
+
         for (auto destination = cities.begin(); destination != cities.end(); ++destination) {
+
             if ((*start)->getId() == (*destination)->getId()) {
+
                 continue;
-            } else if (connectionMatrix[(*destination)->getId()][(*start)->getId()] == 0) {
+            } 
+		
+	    else if (connectionMatrix[(*destination)->getId()][(*start)->getId()] == 0) {
+
                 Edge *e = new Edge((*start), (*destination));
+
                 edgeList.push_back(e);
+
                 connectionMatrix[(*start)->getId()][(*destination)->getId()] = 1;
+
                 connectionMatrix[(*destination)->getId()][(*start)->getId()] = 1;
             }
         }
     }
+
 
     // cleanup
     for (i = 0; i < numCities; i++) {
@@ -172,43 +186,32 @@ vector<Edge*> createEdgeList(vector<Vertex*> cities) {
     return edgeList;
 }
 
+
+//Used Master Branch version for now
 bool does_create_cycle(vector<Edge*> tour_list, Edge* new_edge){
 
-	Vertex* current_v;
-	Edge* current_e;
-	int j = 0;
-
-	//Determine if a cycle has been or will be created
-	if (new_edge == NULL){
-		new_edge = current_e = tour_list[0];
-		current_v = current_e->getV1();
-		j++;
-	}
-
-	else{
-		current_v = new_edge->getV1();
-		current_e = new_edge;
-	}
-
+	Vertex* current_v = new_edge->getV1();
+	Edge* current_e = new_edge;
+	
 	bool done = false;
 
 	while(!done){
 		
 		bool found = false;
 
-		for(int i = j; i < tour_list.size();++i){
+		for(auto start = tour_list.begin(); start != tour_list.end(); ++start){
 	
-			if(tour_list[i] == current_e)
+			if((*start) == current_e)
 				continue;
 			
-			if(tour_list[i]->getV1() == current_v || tour_list[i]->getV2() == current_v){
+			if((*start)->getV1() == current_v || (*start)->getV2() == current_v){
 				found = true;
-				if(tour_list[i]->getV1() == current_v)
-					current_v = tour_list[i]->getV2();
+				if((*start)->getV1() == current_v)
+					current_v = (*start)->getV2();
 
 				else
-					current_v = tour_list[i]->getV1();
-				current_e = tour_list[i];
+					current_v = (*start)->getV1();
+				current_e = (*start);
 				break;
 			}
 		}
@@ -226,11 +229,10 @@ bool does_create_cycle(vector<Edge*> tour_list, Edge* new_edge){
 	return NULL;
 }
 
-vector<Edge*> create_tour(vector<Edge*> edge_list){
+vector<Edge*> create_tour(vector<Edge*> edge_list,int num_cities){
 
 	vector<Edge*> tour_list;
-	int num_cities = edge_list.size();
-	
+	 
 	for(auto start = edge_list.begin(); start != edge_list.end(); ++start){
 		
 		if((*start)->getV1()->getDegree() < 2 && (*start)->getV2()->getDegree() < 2){
@@ -238,16 +240,17 @@ vector<Edge*> create_tour(vector<Edge*> edge_list){
 			bool has_cycle = does_create_cycle(tour_list,(*start));	
 
 			bool should_go_home = false;
-
-			if(tour_list.size() == num_cities)
+			
+			if(tour_list.size()+1 == num_cities){
 				should_go_home = true;
+			}
 
 			if(!has_cycle || (has_cycle && should_go_home)){
 
 				(*start)->getV1()->upDegree();
 				(*start)->getV2()->upDegree();
 				tour_list.push_back((*start));
-				
+								
 			}
 			
 		}
@@ -255,6 +258,40 @@ vector<Edge*> create_tour(vector<Edge*> edge_list){
 	}
 
 	return tour_list;
+
+}
+
+void print_tour(ofstream&  o, vector<Edge*> tour_list, Vertex* search_city){
+
+	while(!tour_list.empty()){
+
+		int i = 0;
+		for(auto start = tour_list.begin(); start!= tour_list.end(); ++start){
+
+			
+			if((*start)->getV1()->getId() == search_city->getId()){
+				
+				o << search_city->getId() << endl;
+				search_city = (*start)->getV2();
+				tour_list.erase(tour_list.begin() + i);
+				break;
+			
+			}
+
+			else if((*start)->getV2()->getId() == search_city->getId()){
+
+				o << search_city->getId() << endl;
+				search_city = (*start)->getV1();
+				tour_list.erase(tour_list.begin() + i);
+				break;
+			}
+		
+			i++;
+		}
+
+	}
+
+	o << search_city->getId() << endl;
 
 }
 
@@ -268,6 +305,7 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
+    cout << "Opening - " << argv[1] << endl;
     // open file
     ifstream f(argv[1]);
 
@@ -276,24 +314,29 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
+    
     // create cities from file contents
     while (getline(f, line)) {
+
         stringstream ss(line);
         string token;
         vector<string> tokens;
-        while (getline(ss, token, ' ')) {
-            tokens.push_back(token);
-        }
-
-        if (tokens.size() == 3) {
-            Vertex *v = new Vertex(
+	
+	//removes all whitespaces
+        while(!ss.eof()){
+		ss >> token;
+		tokens.push_back(token);
+	}
+	if(tokens.size() == 3){
+                Vertex *v = new Vertex(
                 stoi(tokens[0]),
                 stoi(tokens[1]),
                 stoi(tokens[2])
             );
-            cities.push_back(v);
-        }
-    }
+
+           cities.push_back(v);
+        }}
+    
     if (f.bad()) {
         cerr << "error reading file: " << argv[1] << endl;
         return 1;
@@ -312,21 +355,53 @@ int main (int argc, char *argv[]) {
         (*iter)->display();
     }*/
 
+    int num_cities = cities.size();
     // create tour
-    vector<Edge*> tour_list = create_tour(edgeList);
+    vector<Edge*> tour_list = create_tour(edgeList,num_cities);
 
      //remove, here for debug
-     for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
+/*     for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
 		(*iter)->display();
-	}
+	}*/
 
-    // write output
+    
+    int distance = 0;
+    //calculate distance
+   for(auto iter = tour_list.begin(); iter != tour_list.end(); ++iter){
+	distance += (*iter)->getDistance();
+   }
+
+// write output
+     
+   char* str = argv[1];
+   strcat(str,".tour");
+
+   //Can remove next line
+   cout << "Output string is: " << str << endl;	
+
+
+   ofstream o (str);
+
+   if(!o.is_open()){
+
+        cerr << "could not open file: " << str << endl;
+        return 1;
+    }	 
+
+   o << distance << endl;	
+   Edge* current_edge = tour_list[0];
+   o << current_edge->getV1()->getId() << endl;
+   tour_list.erase(tour_list.begin());
+   print_tour(o,tour_list, current_edge->getV2());
 
     // cleanup
+    o.close();    
     cities.clear();
     edgeList.clear();
     tour_list.clear();
 
+
     return 0;
+
 }
 
