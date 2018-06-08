@@ -377,16 +377,13 @@ vector<Vertex*> twoOpt(vector<Vertex*> adj_list, clock_t startTime){
 
 	bool improvement = true;
 
+	
+	int numImprovements = 0;
 	int best_dist = get_total_distance(adj_list);
 
 	//Probably want to add a time component here as well
-	while(improvement){
+	while(improvement && numImprovements < 400 && ((clock()-startTime)/CLOCKS_PER_SEC) <= 150){
 		improvement = false;
-
-		clock_t runTime = clock() - startTime;
-
-		if((runTime/CLOCKS_PER_SEC) >= 150)
-			return adj_list;	
 
 		for(int i = 1; i < adj_list.size() -1; ++i){
 			for(int k = i + 1; k< adj_list.size(); ++k){
@@ -399,10 +396,16 @@ vector<Vertex*> twoOpt(vector<Vertex*> adj_list, clock_t startTime){
 					adj_list = new_route;
 					best_dist = new_distance;
 					improvement = true;
+					numImprovements++;
 					break;
 				}
+
+				if((clock()-startTime)/CLOCKS_PER_SEC >= 150)
+					return adj_list;
 				
 			}
+			if(numImprovements >= 400 || (clock()-startTime)/CLOCKS_PER_SEC >= 150)
+				return adj_list;	
 			
 
 	}
@@ -527,6 +530,7 @@ int main (int argc, char *argv[]) {
 		o << (*iter)->getId() << endl;
 	}   
 
+    cout << "TIME: " << (float)(clock()-startTime)/(float)CLOCKS_PER_SEC << " seconds"  << endl;
     // cleanup
     o.close();    
     adj_list.clear();
