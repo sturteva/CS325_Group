@@ -11,4 +11,4 @@ To verify that all locations were added to the solution file
 
 ## Timing
 To verify that all algorithms run in the required 3 minute time
-`python watch.py python tsp.py [input filepath]`
+`python watch.py ./tsp [input filepath]`
